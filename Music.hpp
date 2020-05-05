@@ -7,10 +7,23 @@
 
 //https://www.quora.com/Which-algorithm-can-be-used-to-go-from-frequency-data-to-a-musical-note
 
-class Arduino_Music {
+#ifndef Music_hpp
+#define Music_hpp
+
+class Music {
     private:
+        #define DEFAULT_ROOT 440
+
         int root_note;
         int output_pin;
 
+        static int get_frequency(char* note, int root = DEFAULT_ROOT) {
+            
+        }
+
     public:
+        Music(const int out, const int root = DEFAULT_ROOT): root_note(root), output_pin(out) {};
+
 };
+
+#endif
