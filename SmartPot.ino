@@ -46,12 +46,13 @@ void waterPlant() {
 // Notify (using sounds), that the water level in the
 // reservoir is too low
 void lowLevelAlarm() {
-    tone(alarmPin, A1#, 20);
+    Music::play_alarm();
 }
 
 // Set the pins 
 void setup() {
     // Assign different pins
+    Music::set_output(alarmPin);
 }
 
 // Check the state of the system in a loop
@@ -65,5 +66,7 @@ void loop() {
         waterPlant();
     }
 
-    delay(GENERAL_TIMEOUT);
+//    delay(GENERAL_TIMEOUT);
+    lowLevelAlarm();
+    delay(HOURS(0) + MINUTES(1));
 }
