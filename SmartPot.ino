@@ -14,8 +14,11 @@
  * enough, etc.). 
  */
 #define GENERAL_TIMEOUT HOURS(6)
-#define PUMP_SPEED 10      // 0 - 100%
+#define PUMP_SPEED 10               // 0 - 100%
 #define PUMP_DURATION SECONDS(5)
+#define MOISTURE_THRESHOLD 30       // 0 - 100%
+#define WATER_LEVEL_TRESHOLD 10     // 0 - 100%
+#define SENSOR_READ_DELAY SECONDS(1)
 
 const int alarmPin = 13;          // Powers the buzzer
 const int pumpSpeedPin = 5;       // Alters the speed of the pumo
@@ -43,7 +46,7 @@ void setup() {
 // Returns the water level (1-100)
 int waterLevel() {
     digitalWrite(waterEnablePin, HIGH);
-    delay(SECONDS(1));
+    delay(SENSOR_READ_DELAY);
     int value = analogRead(waterSensor);
     value = map(value, 100, 600, 0, 100);
     digitalWrite(waterEnablePin, LOW);
@@ -53,7 +56,7 @@ int waterLevel() {
 // Returns the moisture level of the soil (1-100)
 int moistureLevel() {
     digitalWrite(moistureEnablePin, HIGH);
-    delay(SECONDS(1));
+    delay(SENSOR_READ_DELAY);
     int value = analogRead(moistureSensor);
     value = map(value, 1000, 300, 0, 100);
     digitalWrite(moistureEnablePin, LOW);
@@ -64,9 +67,9 @@ int moistureLevel() {
 bool needRefill() {
     // Check the water level in the reservoir.
     // If it is under a treshold, call "lowLevelAlarm" function
-    if(waterLevel() < 10) {
-      lowLevelAlarm();
-      return true;
+    if(waterLevel() < WATER_LEVEL_TRESHOLD) {
+        lowLevelAlarm();
+        return true;
     }
 
     return false;
@@ -76,7 +79,7 @@ bool needRefill() {
 bool needWatering() {
     // Check the moisture level. If it is under
     // a treshold, call "waterPlant" function
-    if(moistureLevel() < 10) {
+    if(moistureLevel() < MOISTURE_THRESHOLD) {
         return true;
     }
     return false;
@@ -134,6 +137,6 @@ void loop() {
         waterPlant(PUMP_SPEED, PUMP_DURATION);
     }
 
-//    delay(GENERAL_TIMEOUT);
-    delay(HOURS(0) + MINUTES(0) + SECONDS(5));
+    delay(GENERAL_TIMEOUT);
+//    delay(HOURS(0) + MIN/UTES(0) + SECONDS(5));
 }
