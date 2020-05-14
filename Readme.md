@@ -6,8 +6,10 @@ Some of the values used in this project were set by trial and error, as this is 
 
 The main code is inside `SmartPot.ino`. All the functionalities (excpet sound playing) is implemented in this file. `Music.hpp` is a small "library", which is used to compute the frequency of notes. With some small changes, this can be made to run on PC's, by changing the "output device" of the sounds.
 
-## Circuit Schematics
+## Circuit schematics & system states
 
 ![Circuit schematics](./docs/circuit.svg)
+
+![System states](./docs/system_states.svg)
 
 © 2020 Grama Nicolae

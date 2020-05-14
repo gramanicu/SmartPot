@@ -16,7 +16,7 @@
 #define GENERAL_TIMEOUT HOURS(6)
 #define PUMP_SPEED 10               // 0 - 100%
 #define PUMP_DURATION SECONDS(5)
-#define MOISTURE_THRESHOLD 30       // 0 - 100%
+#define MOISTURE_TRESHOLD 30       // 0 - 100%
 #define WATER_LEVEL_TRESHOLD 10     // 0 - 100%
 #define SENSOR_READ_DELAY SECONDS(1)
 
@@ -79,7 +79,7 @@ bool needRefill() {
 bool needWatering() {
     // Check the moisture level. If it is under
     // a treshold, call "waterPlant" function
-    if(moistureLevel() < MOISTURE_THRESHOLD) {
+    if(moistureLevel() < MOISTURE_TRESHOLD) {
         return true;
     }
     return false;
