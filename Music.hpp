@@ -70,7 +70,9 @@ static int get_note_num(String noteName) {
         case 'b': {
             num -= 1;
         } break;
-        default: { num += 0; } break;
+        default: {
+            num += 0;
+        } break;
     }
 
     return num;

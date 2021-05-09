@@ -1,5 +1,8 @@
 /**
- * Copyright Grama Nicolae, 2020
+ * @file SmartPot.ino
+ * @author Grama Nicolae (gramanicu@gmail.com)
+ * @brief The main code used by the SmartPot
+ * @copyright Copyright (c) 2021
  */
 
 #include "Music.hpp"
@@ -11,25 +14,25 @@
 /**
  * Here it is stored the time between each state check (check if
  * there is enough water in the reservoir, moisture level is high
- * enough, etc.). 
+ * enough, etc.).
  */
 #define GENERAL_TIMEOUT HOURS(6)
-#define PUMP_SPEED 10               // 0 - 100%
+#define PUMP_SPEED 10  // 0 - 100%
 #define PUMP_DURATION SECONDS(5)
-#define MOISTURE_TRESHOLD 30       // 0 - 100%
-#define WATER_LEVEL_TRESHOLD 10     // 0 - 100%
+#define MOISTURE_TRESHOLD 30     // 0 - 100%
+#define WATER_LEVEL_TRESHOLD 10  // 0 - 100%
 #define SENSOR_READ_DELAY SECONDS(1)
 
 const int alarmPin = 13;          // Powers the buzzer
-const int pumpSpeedPin = 5;       // Alters the speed of the pumo
+const int pumpSpeedPin = 5;       // Alters the speed of the pump
 const int pumpEnablePin = 4;      // Powers the H-Bridge and enables the motor
 const int waterEnablePin = 3;     // Powers the water level sensor
 const int moistureEnablePin = 2;  // Powers the moisture sensor
 
-const int waterSensor = A1;    // Returns analog data from the water level sensor
-const int moistureSensor = A0; // Returns analog data from the moisture sensor
+const int waterSensor = A1;  // Returns analog data from the water level sensor
+const int moistureSensor = A0;  // Returns analog data from the moisture sensor
 
-// Set the pins 
+// Set the pins
 void setup() {
     // Assign different pins
     Music::set_output(alarmPin);
@@ -67,7 +70,7 @@ int moistureLevel() {
 bool needRefill() {
     // Check the water level in the reservoir.
     // If it is under a treshold, call "lowLevelAlarm" function
-    if(waterLevel() < WATER_LEVEL_TRESHOLD) {
+    if (waterLevel() < WATER_LEVEL_TRESHOLD) {
         lowLevelAlarm();
         return true;
     }
@@ -79,7 +82,7 @@ bool needRefill() {
 bool needWatering() {
     // Check the moisture level. If it is under
     // a treshold, call "waterPlant" function
-    if(moistureLevel() < MOISTURE_TRESHOLD) {
+    if (moistureLevel() < MOISTURE_TRESHOLD) {
         return true;
     }
     return false;
@@ -100,43 +103,41 @@ void waterPlant(int power, long duration) {
 
 // Notify (using sounds), that the water level in the
 // reservoir is too low
-void lowLevelAlarm() {
-    Music::play_alarm();
-}
+void lowLevelAlarm() { Music::play_alarm(); }
 
 // Check the state of the system in a loop
 void loop() {
     // If the water level is high enough, and the
     // moisture level is low, water the pot. This
     // will happen at a specified timeout (to increase
-    // the lifetime of the sensors - they can degrade 
+    // the lifetime of the sensors - they can degrade
     // through electrolysis)
-    if(Serial.available()) {
+    if (Serial.available()) {
         String command = Serial.readString();
-        command.replace("\n","");
-        Serial.println("Received " + command); 
-        if(command == "water_plant") {
+        command.replace("\n", "");
+        Serial.println("Received " + command);
+        if (command == "water_plant") {
             waterPlant(PUMP_SPEED, PUMP_DURATION);
         }
-        if(command == "empty_reservoir") {
+        if (command == "empty_reservoir") {
             waterPlant(100, SECONDS(10));
         }
-        if(command == "water_level") {
+        if (command == "water_level") {
             Serial.print("Water level is : ");
             Serial.print(waterLevel());
             Serial.println("%");
         }
-        if(command == "moisture_level") {
+        if (command == "moisture_level") {
             Serial.print("Moisture level is : ");
             Serial.print(moistureLevel());
             Serial.println("%");
         }
     }
-    
-    if(!needRefill() && needWatering()) {
+
+    if (!needRefill() && needWatering()) {
         waterPlant(PUMP_SPEED, PUMP_DURATION);
     }
 
     delay(GENERAL_TIMEOUT);
-//    delay(HOURS(0) + MIN/UTES(0) + SECONDS(5));
+    //    delay(HOURS(0) + MIN/UTES(0) + SECONDS(5));
 }
