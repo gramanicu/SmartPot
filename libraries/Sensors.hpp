@@ -4,6 +4,10 @@
  * @brief The code related to sensors used by SmartPot.
  * @copyright Copyright (c) 2021
  */
+#pragma once
+
+#include "Comms.hpp"
+#include "Display.hpp"
 
 // The sensors are not always on. Before we read the values, we turn them on and
 // wait for the `SENSOR_READ_DELAY` to read the data
@@ -17,6 +21,8 @@
 #define MAX_WATER_LVL 600
 #define MIN_SOIL_LVL 1000
 #define MAX_SOIL_LVL 300
+#define MIN_LIGHT_LVL 150
+#define MAX_LIGHT_LVL 1000
 
 namespace SmartPot {
     namespace DefaultValues {
@@ -24,29 +30,27 @@ namespace SmartPot {
         const uint32_t read_light_pin = A2;
         const uint32_t read_water_pin = A1;
 
-        const uint32_t enable_soil_pin = 8;
-        const uint32_t enable_light_pin = 9;
-        const uint32_t enable_water_pin = 7;
+        const uint32_t enable_pin = 7;
     }    // namespace DefaultValues
 
     class Sensors {
        private:
-        uint32_t soil_en = DefaultValues::enable_soil_pin;
-        uint32_t light_en = DefaultValues::enable_light_pin;
-        uint32_t water_en = DefaultValues::enable_water_pin;
+        uint32_t en_pin = DefaultValues::enable_pin;
 
         uint32_t soil_in = DefaultValues::read_soil_pin;
         uint32_t light_in = DefaultValues::read_light_pin;
         uint32_t water_in = DefaultValues::read_water_pin;
 
+        Display* display;
+        Comms* comms;
+
         /**
          * @brief Generic function that reads data from a sensor.
-         * @param en The enable pin of the sensor (power pin)
          * @param in The output pin (analog data input to the board)
          * @return int The value read from the sensor
          */
-        int sensor_read(uint32_t en, uint32_t in) {
-            digitalWrite(en, HIGH);
+        int sensor_read(uint32_t in) {
+            digitalWrite(en_pin, HIGH);
 
             int avg = 0;
             for (int i = 0; i < SENSOR_READ_COUNT; ++i) {
@@ -56,7 +60,7 @@ namespace SmartPot {
                 avg = avg + val;
             }
 
-            digitalWrite(en, LOW);
+            digitalWrite(en_pin, LOW);
             avg = avg / SENSOR_READ_COUNT;
             return avg;
         }
@@ -68,54 +72,27 @@ namespace SmartPot {
             int light;
         } SensorsData;
 
+        Sensors() {}
+
         /**
          * @brief Initialise the soil (moisture), water level and light sensors,
          * using the default pins.
+         * @param d Pointer to a display object
+         * @param c Pointer to a communications object
          */
-        Sensors() {
-            pinMode(water_en, OUTPUT);
-            pinMode(soil_en, OUTPUT);
-            pinMode(light_en, OUTPUT);
-        };
-
-        /**
-         * @brief Initialise the moisture, water level and light sensors, using
-         * specific pins.
-         * @param se Soil (moisture) Enable Pin (digital out)
-         * @param le Light Enable Pin (digital out)
-         * @param we Water Enable Pin (digital out)
-         * @param si Soil (moisture) Input (analog in)
-         * @param li Light Input (analog in)
-         * @param wi Water Input (analog in)
-         */
-        Sensors(uint32_t se, uint32_t le, uint32_t we, uint32_t si, uint32_t li,
-                uint32_t wi)
-            : soil_en(se),
-              light_en(le),
-              water_en(we),
-              soil_in(si),
-              light_in(li),
-              water_in(wi) {
-            pinMode(water_en, OUTPUT);
-            pinMode(soil_en, OUTPUT);
-            pinMode(light_en, OUTPUT);
+        Sensors(Display* d, Comms* c) : display(d), comms(c) {
+            pinMode(en_pin, OUTPUT);
         };
 
         /**
          * @brief Copy constructor for the sensors
          * @param other The other sensors object
          */
-        Sensors(const Sensors& other)
-            : soil_en(other.soil_en),
-              light_en(other.light_en),
-              water_en(other.water_en),
-              soil_in(other.soil_in),
-              light_in(other.light_in),
-              water_in(other.water_in) {
-            pinMode(water_en, OUTPUT);
-            pinMode(soil_en, OUTPUT);
-            pinMode(light_en, OUTPUT);
-        };
+        Sensors(const Sensors& other) {
+            this->display = other.display;
+            this->comms = other.comms;
+            pinMode(en_pin, OUTPUT);
+        }
 
         /**
          * @brief Copy assignment operator for the sensor object
@@ -123,17 +100,15 @@ namespace SmartPot {
          * @return Sensors& The new sensors object
          */
         Sensors& operator=(const Sensors& other) {
-            this->soil_en = other.soil_en;
-            this->light_en = other.light_en;
-            this->water_en = other.water_en;
-            this->soil_in = other.soil_in;
-            this->light_in = other.light_in;
-            this->water_in = other.water_in;
-            pinMode(water_en, OUTPUT);
-            pinMode(soil_en, OUTPUT);
-            pinMode(light_en, OUTPUT);
+            this->display = other.display;
+            this->comms = other.comms;
+            pinMode(en_pin, OUTPUT);
         };
 
+        /**
+         * @brief Read data from all the sensors
+         * @return SensorsData The data
+         */
         SensorsData read_all() {
             int water, soil, light;
             water = read_water();
@@ -142,14 +117,32 @@ namespace SmartPot {
             return {water, soil, light};
         }
 
+        /**
+         * @brief Get the water level from the water level sensor
+         * @return int The "fill percent" (0-100)
+         */
         int read_water() {
-            int val = sensor_read(water_en, water_in);
+            int val = sensor_read(water_in);
             return map(val, MIN_WATER_LVL, MAX_WATER_LVL, 0, 100);
         }
+
+        /**
+         * @brief Get the moisture level of the soil, using the moisture
+         * sensor
+         * @return int The moisture level of the soil (0-100)
+         */
         int read_soil() {
-            int val = sensor_read(soil_en, soil_in);
+            int val = sensor_read(soil_in);
             return map(val, MIN_SOIL_LVL, MAX_SOIL_LVL, 0, 100);
         }
-        int read_light() { return sensor_read(light_en, light_in); }
+
+        /**
+         * @brief Get the luminosity level, using the LDR sensor
+         * @return int The luminosity level (0-100)
+         */
+        int read_light() {
+            int val = sensor_read(light_in);
+            return map(val, MIN_LIGHT_LVL, MAX_LIGHT_LVL, 0, 100);
+        }
     };
 }    // namespace SmartPot

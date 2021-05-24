@@ -4,6 +4,10 @@
  * @brief  The code related to the water pump used by SmartPot.
  * @copyright Copyright (c) 2021
  */
+#pragma once
+
+#include "Comms.hpp"
+#include "Display.hpp"
 
 #define MIN_POWER_ABS 100
 #define MAX_POWER_ABS 255
@@ -19,24 +23,19 @@ namespace SmartPot {
        private:
         uint32_t power_pin = DefaultValues::set_motor_pin;
         uint32_t enable_pin = DefaultValues::enable_motor_pin;
+        Display* display;
+        Comms* comms;
 
        public:
+        Pump() {}
+
         /**
          * @brief Initialise the water pump object, using
          * the default pins
+         * @param d Pointer to a display object
+         * @param c Pointer to a communications object
          */
-        Pump() {
-            pinMode(power_pin, OUTPUT);
-            pinMode(enable_pin, OUTPUT);
-        };
-
-        /**
-         * @brief Initialise the water pump object, using
-         * specific pins.
-         * @param sp The power control for the pump
-         * @param en The enable pin for the pump
-         */
-        Pump(uint32_t sp, uint32_t en) : power_pin(sp), enable_pin(en) {
+        Pump(Display* d, Comms* c) : display(d), comms(c) {
             pinMode(power_pin, OUTPUT);
             pinMode(enable_pin, OUTPUT);
         };
@@ -45,8 +44,9 @@ namespace SmartPot {
          * @brief Copy constructor for the pump object
          * @param other The other pump object
          */
-        Pump(const Pump& other)
-            : power_pin(other.power_pin), enable_pin(other.enable_pin) {
+        Pump(const Pump& other) {
+            this->display = other.display;
+            this->comms = other.comms;
             pinMode(power_pin, OUTPUT);
             pinMode(enable_pin, OUTPUT);
         };
@@ -57,8 +57,8 @@ namespace SmartPot {
          * @return Pump& The new pump object
          */
         Pump& operator=(const Pump& other) {
-            this->power_pin = other.power_pin;
-            this->enable_pin = other.enable_pin;
+            this->display = other.display;
+            this->comms = other.comms;
             pinMode(power_pin, OUTPUT);
             pinMode(enable_pin, OUTPUT);
         };
