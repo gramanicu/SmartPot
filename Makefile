@@ -1,4 +1,4 @@
-# Copyright 2020 Grama Nicolae
+# Copyright 2021 Grama Nicolae
 
 .PHONY: beauty
 .SILENT: beauty
